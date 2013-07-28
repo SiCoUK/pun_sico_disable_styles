@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE extension SYSTEM "ext-1.0.dtd">
+
+<!--
+/**
+ * SiCo Disable User Styles and allow admin to overwrite choices
+ *
+ * @copyright Copyright (C) 2011 Simon Corless
+ * @package sico_disable_styles
+ */
+-->
+<extension engine="1.0">
+    <id>sico_disable_styles</id>
+    <title>SiCo Disable Styles</title>
+    <version>1.0.2</version>
+    <description>Disable the styles selection box and allow the admin to set one style for the forum.</description>
+    <author>Simon Corless</author>
+    <minversion>1.3.6</minversion>
+    <maxtestedon>1.3.6</maxtestedon>
+
+    <install><![CDATA[
+
+    ]]></install>
+
+    <uninstall><![CDATA[
+
+    ]]></uninstall>
+
+    <hooks>
+        <!--
+        /**
+         * Add a form checkbox underneath the admin style selector
+         */-->
+        <hook id="aop_setup_pre_personal_fieldset_end"><![CDATA[
+
+            // Include the language file
+            if (file_exists($ext_info['path'].'/lang/'.$forum_user['language'].'/'.$ext_info['id'].'.php')) {
+                include_once($ext_info['path'].'/lang/'.$forum_user['language'].'/'.$ext_info['id'].'.php');
+            } else {
+                include_once($ext_info['path'].'/lang/English/'.$ext_info['id'].'.php');
+            }
+            ?>
+            <div class="sf-set set<?php echo ++$forum_page['item_count']; ?>">
+                <div class="sf-box checkbox">
+                    <label for="fld<?php echo $forum_page['fld_count']; ?>">
+                        <span><?php echo $lang_sico_disable_styles['Label update style']; ?></span>
+                        <?php echo $lang_sico_disable_styles['Description update style']; ?>
+                    </label>
+                    <span class="fld-input"><input type="checkbox" id="fld<?php echo ++$forum_page['fld_count'] ?>" name="form[sico_disable_styles_update]" value="1" /></span>
+                </div>
+            </div>
+            <?php
+
+        ]]></hook>
+
+        <!--
+        /**
+         * Update all users to use the style selection box
+         */ -->
+        <hook id="aop_pre_update_configuration"><![CDATA[
+
+            // Check if the checkbox was set
+            if (!empty($_POST['form']['sico_disable_styles_update'])) {
+                // Update all users styles to the selected style
+                $query = array(
+                    'UPDATE' => 'users',
+                    'SET' => 'style=\'' . $forum_db->escape($form['default_style']) . '\'',
+                );
+
+                $forum_db->query_build($query) or error(__FILE__, __LINE__);
+            }
+
+        ]]></hook>
+
+        <!--
+        /**
+         * Disable the display of the styles selection box for users
+         */-->
+        <hook id="pf_change_details_settings_pre_style"><![CDATA[
+
+            // Unset and recreate the forum styles
+            unset($forum_page['styles']);
+            $forum_page['styles'] = array($forum_config['o_default_style']);
+
+        ]]></hook>
+    </hooks>
+
+</extension>
